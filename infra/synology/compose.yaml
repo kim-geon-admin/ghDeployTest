@@ -1,0 +1,34 @@
+# Production stack for the Synology NAS, driven by infra/synology/deploy.sh.
+# IMAGE_TAG is injected by the deploy script; everything else comes from the .env file next to
+# this compose file on the NAS. DSM already owns ports 80/443, so HTTPS is terminated by the DSM
+# reverse proxy and the app only listens on the NAS loopback.
+#
+# Rules the deploy script relies on:
+#   - "name:" equals PROJECT in deploy.sh (containers become <project>-<service>-1)
+#   - every service built by the workflow uses image ghcr.io/<owner>/<project>-<service>:${IMAGE_TAG}
+#   - no container_name: (it breaks the name-conflict check and parallel recreation)
+#   - give HTTP services a healthcheck; services without one only need to stay "running"
+name: ghdeploytest
+
+services:
+  web:
+    image: ghcr.io/kim-geon-admin/ghdeploytest-web:${IMAGE_TAG:?IMAGE_TAG is set by deploy.sh}
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      # nginx 는 읽기 전용에서도 이 경로에 써야 합니다 (캐시, PID 파일).
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    ports:
+      - "${HTTP_BIND:-127.0.0.1:3110}:8080"
+    environment:
+      - PORT=8080
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
