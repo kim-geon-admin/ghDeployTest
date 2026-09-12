@@ -20,7 +20,7 @@ services:
     tmpfs:
       - /tmp
     ports:
-      - "${HTTP_BIND:-127.0.0.1:3100}:3000"
+      - "${HTTP_BIND:-127.0.0.1:3333}:3000"
     environment:
       - PORT=3000
     volumes:
