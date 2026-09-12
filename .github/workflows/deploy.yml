@@ -1,8 +1,10 @@
 name: deploy
 
 on:
-  push:
-    branches: [main]
+  # 시험 중에는 자동 실행을 끄고 손으로만 실행합니다.
+  # 준비가 끝나면 아래 두 줄의 주석을 풀어 main push 자동 배포로 되돌립니다.
+  # push:
+  #   branches: [main]
   workflow_dispatch:
 
 # Every job starts from read-only and asks for more explicitly.
