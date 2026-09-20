@@ -6,6 +6,6 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test test/server.test.js test/deploy-config.test.mjs"
   }
 }

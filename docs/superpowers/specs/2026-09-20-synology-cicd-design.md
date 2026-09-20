@@ -38,7 +38,7 @@ The app is exposed only on the NAS loopback interface. DSM owns external ports 8
 - `.gitignore`: excludes the NAS `.env`, CLI configuration, and local deployment secrets.
 - `README.md`: project-specific deployment and post-install verification instructions.
 
-The existing `Dockerfile`, application code, and `npm test` script remain unchanged.
+The existing `Dockerfile` and application code remain unchanged. The `npm test` script explicitly targets the repository's `test/` directory so unrelated untracked fixtures cannot change the CI test scope.
 
 ## Security and secrets
 
