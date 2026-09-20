@@ -42,7 +42,7 @@ Deployment target:
 - Health endpoint: `/health`
 - Container: `ghdeploytest-app-1`
 
-Create the NAS-owned `infra/synology/.env` from `.env.example` with mode `600`. The example contains `HTTP_BIND=127.0.0.1:3200`; it is safe to commit because it contains no secret. This app has no persistent data volume or backup file.
+On the NAS, create `/volume1/docker/ghdeploytest/.env` from the repository's `infra/synology/.env.example` and set mode `600`. The NAS path is not `infra/synology/.env`; the deployment script reads the absolute NAS path. The example contains `HTTP_BIND=127.0.0.1:3200`; it is safe to commit because it contains no secret. This app has no persistent data volume or backup file.
 
 The workflow expects these repository secrets:
 
@@ -50,6 +50,6 @@ The workflow expects these repository secrets:
 - `NAS_SSH_PORT` = `2233`
 - `NAS_SSH_USER` = `test-deploy`
 - `NAS_SSH_PRIVATE_KEY` = the restricted deployment private key
-- `NAS_SSH_KNOWN_HOSTS` = the pinned host key from `ssh-keyscan -p 2233 nayaguny.synology.me`
+- `NAS_SSH_KNOWN_HOSTS` = the host key from `ssh-keyscan -p 2233 nayaguny.synology.me`, after independently comparing its fingerprint with the fingerprint from a previously trusted DSM administrator session or NAS console
 
 `GITHUB_TOKEN` is supplied automatically by Actions for GHCR access. Do not copy it or any registry credential to the NAS. Deployment logs are stored in `/volume1/docker/ghdeploytest/state/logs/`; a failed replacement rolls back to the previous SHA image when available.

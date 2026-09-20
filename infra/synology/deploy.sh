@@ -96,6 +96,7 @@ container_field() { "$DOCKER" inspect -f "$2" "$1" 2>/dev/null || true; }
 mkdir -p "$STATE_DIR" "$BACKUP_DIR"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
   holder=$(cat "$LOCK_DIR/pid" 2>/dev/null || true)
+  [[ -n "$holder" ]] || die "deploy lock exists without an owner pid; retry after it is released or remove the stale lock manually"
   if [[ -n "$holder" ]] && kill -0 "$holder" 2>/dev/null; then
     die "another deploy (pid $holder) is still running"
   fi
@@ -248,6 +249,10 @@ roll_back() {
   fi
   log "rolling back to $rollback_tag"
   if compose "$rollback_tag" up -d --remove-orphans && verify_stack "$rollback_tag"; then
+    echo "$rollback_tag" > "$STATE_DIR/current-tag"
+    if [[ "$current_tag" == "$new_tag" ]]; then
+      : > "$STATE_DIR/previous-tag"
+    fi
     if ! $was_running; then
       log "stack was stopped before the deploy; stopping it again"
       compose "$rollback_tag" stop || true
