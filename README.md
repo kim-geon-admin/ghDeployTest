@@ -27,3 +27,29 @@ npm start    # http://localhost:3000
 
 `main` 에 push 하면 GitHub Actions 가 테스트 → 이미지 빌드(GHCR) → NAS 배포를 진행합니다.
 설정은 `infra/synology/` 에 있으며 `nas-deploy` CLI 로 만들었습니다.
+
+## Synology deployment
+
+GitHub Actions deploys the `main` branch to Synology after `npm test` passes. The workflow builds the root `Dockerfile` and publishes the immutable image `ghcr.io/kim-geon-admin/ghdeploytest-app` with the commit SHA as its tag.
+
+Deployment target:
+
+- SSH endpoint: `nayaguny.synology.me:2233`
+- Deployment account: `test-deploy`
+- NAS directory: `/volume1/docker/ghdeploytest`
+- App binding: `127.0.0.1:3200` to container port `3000`
+- External HTTPS: DSM reverse proxy to `127.0.0.1:3200`
+- Health endpoint: `/health`
+- Container: `ghdeploytest-app-1`
+
+Create the NAS-owned `infra/synology/.env` from `.env.example` with mode `600`. The example contains `HTTP_BIND=127.0.0.1:3200`; it is safe to commit because it contains no secret. This app has no persistent data volume or backup file.
+
+The workflow expects these repository secrets:
+
+- `NAS_SSH_HOST` = `nayaguny.synology.me`
+- `NAS_SSH_PORT` = `2233`
+- `NAS_SSH_USER` = `test-deploy`
+- `NAS_SSH_PRIVATE_KEY` = the restricted deployment private key
+- `NAS_SSH_KNOWN_HOSTS` = the pinned host key from `ssh-keyscan -p 2233 nayaguny.synology.me`
+
+`GITHUB_TOKEN` is supplied automatically by Actions for GHCR access. Do not copy it or any registry credential to the NAS. Deployment logs are stored in `/volume1/docker/ghdeploytest/state/logs/`; a failed replacement rolls back to the previous SHA image when available.
