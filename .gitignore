@@ -1,4 +1,1 @@
 .env
-infra/synology/.env
-deploy.config.json
-infra/synology/deploy.config.json
