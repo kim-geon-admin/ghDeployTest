@@ -1,0 +1,24 @@
+# Production stack for the Synology NAS, driven by infra/synology/deploy.sh.
+# IMAGE_TAG is injected by deploy.sh; HTTP_BIND comes from the NAS-owned .env file.
+# DSM terminates external HTTPS through its reverse proxy, so the app listens only on the NAS loopback.
+name: ghdeploytest
+
+services:
+  app:
+    image: ghcr.io/kim-geon-admin/ghdeploytest-app:${IMAGE_TAG:?IMAGE_TAG is set by deploy.sh}
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    ports:
+      - "${HTTP_BIND:-127.0.0.1:3200}:3000"
+    environment:
+      - PORT=3000
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
